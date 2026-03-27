@@ -13,7 +13,14 @@ public class Main {
 
         // Iniciar base de datos
         DatabaseManager.getInstance();
-
+        
+        // Cerrar conexión al salir
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        DatabaseManager.getInstance().cerrarConexion();
+        System.out.println("Conexión cerrada correctamente.");
+        }));
+        
+        
         // Lanzar la interfaz grafica
         SwingUtilities.invokeLater(() -> {
             System.out.println("GestionMusical arrancado correctamente.");

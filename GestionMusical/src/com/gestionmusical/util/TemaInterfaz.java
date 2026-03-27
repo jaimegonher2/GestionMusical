@@ -9,9 +9,9 @@ public class TemaInterfaz {
 
     public static void aplicarTema() {
         try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
-        } catch (Exception e) {
-            System.err.println("Error al aplicar el tema FlatLaf: " + e.getMessage());
+    UIManager.setLookAndFeel(new FlatLightLaf());
+            } catch (javax.swing.UnsupportedLookAndFeelException e) {
+    System.err.println("Look and Feel no soportado: " + e.getMessage());
         }
     }
 }
