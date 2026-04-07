@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.UnsupportedEncodingException;
 
 /**
  * Acceso a datos de la entidad Usuario.
@@ -22,21 +23,23 @@ public class UsuarioDAO {
 
     //  SHA-256
     public static String hashSHA256(String texto) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest(texto.getBytes());
-            StringBuilder sb = new StringBuilder();
-            for (byte b : hash) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 no disponible", e);
+    try {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        byte[] hash = md.digest(texto.getBytes("UTF-8"));
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hash) {
+            sb.append(String.format("%02x", b));
         }
+        return sb.toString();
+    } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+        throw new RuntimeException("Error al generar hash SHA-256", e);
     }
+}
+    
 
     // Login
     public Usuario login(String nombreUsuario, String contrasena) {
+        
         String sql = "SELECT * FROM USUARIO WHERE nombre_usuario = ? AND contrasena_hash = ? AND activo = 1";
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, nombreUsuario);

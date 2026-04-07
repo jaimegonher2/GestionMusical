@@ -83,6 +83,17 @@ public class Usuario {
         this.fechaCreacion = fechaCreacion;
     }
 
+    
+    //Método para comprobar si el usuario es administrador
+    public boolean esAdmin() {
+    return "admin".equals(rol);
+        }
+
+    
+    //Método para comprobar si el usuario está activo
+    public boolean estaActivo() {
+    return activo == 1;
+}       
     @Override
     public String toString() {
         return "Usuario{" + "idUsuario=" + idUsuario + ", nombreUsuario=" + nombreUsuario + ", contrasenaHash=" + contrasenaHash + ", nombreCompleto=" + nombreCompleto + ", rol=" + rol + ", activo=" + activo + ", fechaCreacion=" + fechaCreacion + '}';

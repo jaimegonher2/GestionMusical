@@ -1,8 +1,8 @@
 
-
 import com.gestionmusical.database.DatabaseManager;
 import com.gestionmusical.util.TemaInterfaz;
 import javax.swing.SwingUtilities;
+import com.gestionmusical.view.LoginView;
 
 
 public class Main {
@@ -14,7 +14,7 @@ public class Main {
         // Iniciar base de datos
         DatabaseManager.getInstance();
         
-        // Cerrar conexión al salir
+        // Cerrar conexión al salir según lo indicado por Raúl.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
         DatabaseManager.getInstance().cerrarConexion();
         System.out.println("Conexión cerrada correctamente.");
@@ -22,8 +22,6 @@ public class Main {
         
         
         // Lanzar la interfaz grafica
-        SwingUtilities.invokeLater(() -> {
-            System.out.println("GestionMusical arrancado correctamente.");
-        });
+         SwingUtilities.invokeLater(() -> new LoginView().setVisible(true));
     }
 }

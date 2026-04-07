@@ -1,10 +1,11 @@
 package com.gestionmusical.database;
 
-import java.io.File;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 
 
 public class DatabaseManager {
@@ -170,7 +171,18 @@ public class DatabaseManager {
         st.execute("CREATE INDEX IF NOT EXISTS idx_linea_producto     ON LINEA_VENTA(id_producto)");
         st.execute("CREATE INDEX IF NOT EXISTS idx_devolucion_venta   ON DEVOLUCION(id_venta)");
         st.execute("CREATE INDEX IF NOT EXISTS idx_cliente_apellidos  ON CLIENTE(apellidos)");
-
+            
+        // INsertar un usuario admin por defecto
+        String sqlAdmin = """
+        INSERT OR IGNORE INTO USUARIO (nombre_usuario, contrasena_hash, nombre_completo, rol)
+        VALUES ('admin', ?, 'Administrador', 'admin')
+        """;
+        try (PreparedStatement ps = connection.prepareStatement(sqlAdmin)) {
+            ps.setString(1, com.gestionmusical.dao.UsuarioDAO.hashSHA256("admin123"));
+            ps.executeUpdate();
+        }
+        
+        
         st.close();
     }
 }
