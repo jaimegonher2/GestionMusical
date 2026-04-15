@@ -41,15 +41,15 @@ public class PanelPrincipal extends JFrame {
         lblRol.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         //Botones del menú
-        JButton btnProductos    = crearBotonMenu("Productos");
-        JButton btnClientes     = crearBotonMenu("Clientes");
-        JButton btnVentas       = crearBotonMenu("Ventas");
+        JButton btnProductos = crearBotonMenu("Productos");
+        JButton btnClientes = crearBotonMenu("Clientes");
+        JButton btnVentas = crearBotonMenu("Ventas");
         JButton btnDevoluciones = crearBotonMenu("Devoluciones");
-        JButton btnInformes     = crearBotonMenu("Informes");
+        JButton btnInformes = crearBotonMenu("Informes");
         JButton btnCerrarSesion = crearBotonMenu("Cerrar sesión");
 
         //acciones de los botones
-        btnProductos.addActionListener(e -> mostrarPanel(new JLabel("Módulo Productos")));
+        btnProductos.addActionListener(e -> mostrarPanel(new ProductoPanel()));
         btnClientes.addActionListener(e -> mostrarPanel(new JLabel("Módulo Clientes")));
         btnVentas.addActionListener(e -> mostrarPanel(new JLabel("Módulo Ventas")));
         btnDevoluciones.addActionListener(e -> mostrarPanel(new JLabel("Módulo Devoluciones")));
@@ -117,10 +117,10 @@ public class PanelPrincipal extends JFrame {
     // Cerrar sesion
     private void cerrarSesion() {
         int opcion = JOptionPane.showConfirmDialog(
-            this,
-            "¿Seguro que quieres cerrar sesión?",
-            "Cerrar sesión",
-            JOptionPane.YES_NO_OPTION
+                this,
+                "¿Seguro que quieres cerrar sesión?",
+                "Cerrar sesión",
+                JOptionPane.YES_NO_OPTION
         );
         if (opcion == JOptionPane.YES_OPTION) {
             new LoginView().setVisible(true);

@@ -126,7 +126,15 @@ public class Producto {
     public void setActivo(int activo) {
         this.activo = activo;
     }
-
+    
+    
+    public boolean estaActivo() {
+    return activo == 1;
+        }
+    
+    public boolean stockBajoMinimo() {
+    return stockActual <= stockMinimo;
+        }
     @Override
     public String toString() {
         return "Producto{" + "idProducto=" + idProducto + ", nombre=" + nombre + ", descripcion=" + descripcion + ", proveedor=" + proveedor + ", precioCompra=" + precioCompra + ", precioVenta=" + precioVenta + ", stockActual=" + stockActual + ", stockMinimo=" + stockMinimo + ", idCategoria=" + idCategoria + ", fechaAlta=" + fechaAlta + ", activo=" + activo + '}';
