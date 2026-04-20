@@ -21,7 +21,7 @@ public class DatabaseManager {
         try {
             connection = DriverManager.getConnection(BBDD_URL);
             connection.createStatement().execute("PRAGMA foreign_keys = ON");
-            EsquemaBBDD();
+            esquemaBBDD();
             System.out.println("Base de datos conectada: " + BBDD);
         } catch (SQLException e) {
             System.err.println("Error al conectar con la base de datos: " + e.getMessage());
@@ -54,8 +54,8 @@ public class DatabaseManager {
     }
 
     //crear esquema de la base de datos
-    private void EsquemaBBDD() throws SQLException {
-        Statement st = connection.createStatement();
+    private void esquemaBBDD() throws SQLException {
+       try( Statement st = connection.createStatement()){
 
         // USUARIO
         st.execute("""
@@ -172,6 +172,7 @@ public class DatabaseManager {
         st.execute("CREATE INDEX IF NOT EXISTS idx_devolucion_venta   ON DEVOLUCION(id_venta)");
         st.execute("CREATE INDEX IF NOT EXISTS idx_cliente_apellidos  ON CLIENTE(apellidos)");
             
+       }
         // INsertar un usuario admin por defecto
         String sqlAdmin = """
         INSERT OR IGNORE INTO USUARIO (nombre_usuario, contrasena_hash, nombre_completo, rol)
@@ -183,6 +184,5 @@ public class DatabaseManager {
         }
         
         
-        st.close();
     }
 }
