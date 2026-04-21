@@ -99,6 +99,11 @@ public class Cliente {
     public void setObservaciones(String observaciones) {
         this.observaciones = observaciones;
     }
+    
+    public String getNombreCompleto() {
+        return nombre + " " + apellidos;
+    }
+    
 
     @Override
     public String toString() {
