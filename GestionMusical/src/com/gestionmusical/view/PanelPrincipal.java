@@ -52,7 +52,7 @@ public class PanelPrincipal extends JFrame {
         btnProductos.addActionListener(e -> mostrarPanel(new ProductoPanel()));
         btnClientes.addActionListener(e -> mostrarPanel(new ClientePanel()));
         btnVentas.addActionListener(e -> mostrarPanel(new VentaPanel(usuarioActivo)));
-        btnDevoluciones.addActionListener(e -> mostrarPanel(new JLabel("Módulo Devoluciones")));
+        btnDevoluciones.addActionListener(e -> mostrarPanel(new DevolucionPanel(usuarioActivo)));
         btnInformes.addActionListener(e -> mostrarPanel(new JLabel("Módulo Informes")));
         btnCerrarSesion.addActionListener(e -> cerrarSesion());
 
