@@ -47,13 +47,15 @@ public class PanelPrincipal extends JFrame {
         JButton btnDevoluciones = crearBotonMenu("Devoluciones");
         JButton btnInformes = crearBotonMenu("Informes");
         JButton btnCerrarSesion = crearBotonMenu("Cerrar sesión");
+        JButton btnBackup = crearBotonMenu("Copias de seguridad");
 
         //acciones de los botones
         btnProductos.addActionListener(e -> mostrarPanel(new ProductoPanel()));
         btnClientes.addActionListener(e -> mostrarPanel(new ClientePanel()));
         btnVentas.addActionListener(e -> mostrarPanel(new VentaPanel(usuarioActivo)));
         btnDevoluciones.addActionListener(e -> mostrarPanel(new DevolucionPanel(usuarioActivo)));
-        btnInformes.addActionListener(e -> mostrarPanel(new JLabel("Módulo Informes")));
+        btnInformes.addActionListener(e -> mostrarPanel(new InformePanel()));
+        btnBackup.addActionListener(e -> mostrarPanel(new BackupPanel(usuarioActivo)));
         btnCerrarSesion.addActionListener(e -> cerrarSesion());
 
         // ocultar botones que son solo para el administrador
@@ -73,6 +75,8 @@ public class PanelPrincipal extends JFrame {
         barraLateral.add(btnDevoluciones);
         barraLateral.add(Box.createVerticalStrut(6));
         barraLateral.add(btnInformes);
+        barraLateral.add(Box.createVerticalStrut(6));
+        barraLateral.add(btnBackup);
         barraLateral.add(Box.createGlue());
         barraLateral.add(btnCerrarSesion);
 
