@@ -40,12 +40,14 @@ public class ClientePanel extends JPanel {
         JButton btnNuevo = new JButton("Nuevo");
         JButton btnEditar = new JButton("Editar");
         JButton btnDesactivar = new JButton("Desactivar");
+        JButton btnHistorial = new JButton("Historial");
 
         btnBuscar.addActionListener(e -> buscar());
         btnTodos.addActionListener(e -> cargarClientes());
         btnNuevo.addActionListener(e -> abrirFormulario(null));
         btnEditar.addActionListener(e -> editarSeleccionado());
         btnDesactivar.addActionListener(e -> desactivarSeleccionado());
+        btnHistorial.addActionListener(e -> verHistorial());
 
         barraTop.add(campoBusqueda);
         barraTop.add(btnBuscar);
@@ -53,6 +55,7 @@ public class ClientePanel extends JPanel {
         barraTop.add(btnNuevo);
         barraTop.add(btnEditar);
         barraTop.add(btnDesactivar);
+        barraTop.add(btnHistorial);
 
         // Tabla de clientes
         String[] columnas = {"ID", "Apellidos", "Nombre", "Teléfono", "Email", "Dirección"};
@@ -189,5 +192,59 @@ public class ClientePanel extends JPanel {
             }
             cargarClientes();
         }
+    }
+
+    private void verHistorial() {
+        // Comprobar que hay una fila seleccionada
+        int fila = tabla.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Selecciona un cliente para ver su historial.");
+            return;
+        }
+
+        // Obtener el ID y nombre del cliente seleccionado
+        int idCliente = (int) modeloTabla.getValueAt(fila, 0);
+        String nombreCliente = modeloTabla.getValueAt(fila, 2) + " " + modeloTabla.getValueAt(fila, 1);
+
+        // Obtener las ventas del cliente desde la BD
+        List<com.gestionmusical.model.Venta> ventas = new com.gestionmusical.dao.VentaDAO().listarPorCliente(idCliente);
+
+        // Si no tiene compras mostrar aviso y salir
+        if (ventas.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Este cliente no tiene compras registradas.");
+            return;
+        }
+
+        // Crear el modelo de la tabla del historial
+        String[] columnas = {"ID Venta", "Fecha", "Total", "Forma de pago"};
+        javax.swing.table.DefaultTableModel modelo = new javax.swing.table.DefaultTableModel(columnas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) {
+                return false;
+            }
+        };
+
+        // Rellenar la tabla con las ventas del cliente
+        for (com.gestionmusical.model.Venta v : ventas) {
+            modelo.addRow(new Object[]{
+                v.getIdVenta(),
+                v.getFechaHora(),
+                String.format("%.2f €", v.getTotal()),
+                v.getFormaPago()
+            });
+        }
+
+        // Crear la tabla dentro de un JScrollPane
+        JTable tablaHistorial = new JTable(modelo);
+        tablaHistorial.setRowHeight(26);
+        tablaHistorial.getTableHeader().setReorderingAllowed(false);
+
+        JScrollPane scroll = new JScrollPane(tablaHistorial);
+        scroll.setPreferredSize(new Dimension(500, 300));
+
+        // Mostrar el historial en un cuadro de diálogo
+        JOptionPane.showMessageDialog(this, scroll,
+                "Historial de compras — " + nombreCliente,
+                JOptionPane.PLAIN_MESSAGE);
     }
 }

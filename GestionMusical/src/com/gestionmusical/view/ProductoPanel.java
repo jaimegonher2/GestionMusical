@@ -33,7 +33,7 @@ public class ProductoPanel extends JPanel {
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
         // Barra superior con busqueda y botones
-        JPanel barraTop = new JPanel(new BorderLayout(10, 0));
+        
 
         campoBusqueda = new JTextField();
         campoBusqueda.setPreferredSize(new Dimension(220, 32));
@@ -64,9 +64,14 @@ public class ProductoPanel extends JPanel {
         etiquetaAlerta = new JLabel(" ");
         etiquetaAlerta.setForeground(new Color(180, 60, 0));
         etiquetaAlerta.setFont(new Font("SansSerif", Font.BOLD, 12));
+        etiquetaAlerta.setBorder(new EmptyBorder(2, 4, 2, 4));
 
-        barraTop.add(etiquetaAlerta, BorderLayout.WEST);
-        barraTop.add(panelBotones, BorderLayout.EAST);
+        // Panel norte: botones arriba, alerta abajo
+        JPanel panelNorte = new JPanel(new BorderLayout());
+        panelNorte.add(panelBotones, BorderLayout.NORTH);
+        panelNorte.add(etiquetaAlerta, BorderLayout.SOUTH);
+
+        
 
         // Tabla de productos
         String[] columnas = {"ID", "Nombre", "Categoría", "Precio venta", "Stock", "Stock mín.", "Proveedor"};
@@ -85,7 +90,7 @@ public class ProductoPanel extends JPanel {
 
         JScrollPane scroll = new JScrollPane(tabla);
 
-        add(barraTop, BorderLayout.NORTH);
+        add(panelNorte, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
     }
 
