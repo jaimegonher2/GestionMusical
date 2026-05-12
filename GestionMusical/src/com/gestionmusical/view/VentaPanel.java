@@ -46,10 +46,11 @@ public class VentaPanel extends JPanel {
     private JComboBox<String> comboPago;
     private JComboBox<Cliente> comboCliente;
 
+    // Descuento
+    private JTextField campoDescuento;
 
     private final List<LineaVenta> lineasEnCurso = new ArrayList<>();
 
-    
     private List<Producto> productosEncontrados = new ArrayList<>();
 
     public VentaPanel(Usuario usuarioActivo) {
@@ -57,7 +58,6 @@ public class VentaPanel extends JPanel {
         initComponents();
     }
 
-  
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
         setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -194,6 +194,11 @@ public class VentaPanel extends JPanel {
         panel.add(new JLabel("Forma de pago:"));
         comboPago = new JComboBox<>(new String[]{"efectivo", "tarjeta", "otros"});
         panel.add(comboPago);
+        // Campo de descuento
+        panel.add(new JLabel("Descuento (%):"));
+        campoDescuento = new JTextField("0");
+        campoDescuento.setPreferredSize(new Dimension(60, 30));
+        panel.add(campoDescuento);
         JButton btnCancelar = new JButton("Cancelar venta");
         JButton btnCobrar = new JButton("Cobrar");
         btnCobrar.setBackground(new Color(40, 140, 40));
@@ -323,8 +328,18 @@ public class VentaPanel extends JPanel {
 
         // Crear el objeto Venta
         Venta venta = new Venta();
-        venta.setTotal(total);
-        venta.setDescuento(0);
+        double descuento = 0;
+        try {
+            descuento = Double.parseDouble(campoDescuento.getText().trim());
+            if (descuento < 0 || descuento > 100) {
+                descuento = 0;
+            }
+        } catch (NumberFormatException e) {
+            descuento = 0;
+        }
+        double totalConDescuento = total - (total * descuento / 100);
+        venta.setTotal(totalConDescuento);
+        venta.setDescuento(descuento);
         venta.setFormaPago((String) comboPago.getSelectedItem());
         venta.setIdUsuario(usuarioActivo.getIdUsuario());
         venta.setIdCliente(idCliente);
@@ -365,5 +380,6 @@ public class VentaPanel extends JPanel {
         modeloLista.clear();
         spinnerCantidad.setValue(1);
         comboCliente.setSelectedIndex(0);
+        campoDescuento.setText("0");
     }
 }
