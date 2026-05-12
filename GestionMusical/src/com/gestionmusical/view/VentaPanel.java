@@ -161,57 +161,64 @@ public class VentaPanel extends JPanel {
         return panel;
     }
 
-    // Panel inferior, forma de pago y cobro.
+    // forma de pago y cobro
     private JPanel crearPanelCobro() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
-        panel.setBorder(new TitledBorder("Cobro"));
+    JPanel panel = new JPanel(new BorderLayout(0, 4));
+    panel.setBorder(new TitledBorder("Cobro"));
 
-        // Selector de cliente (opcional)
-        panel.add(new JLabel("Cliente:"));
-        comboCliente = new JComboBox<>();
-        comboCliente.addItem(null); // anonimo
-        for (Cliente c : clienteDAO.listarTodos()) {
-            comboCliente.addItem(c);
-        }
-        // Mostrar nombre completo en el combo
-        comboCliente.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value,
-                    int index, boolean isSelected, boolean cellHasFocus) {
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Cliente) {
-                    setText(((Cliente) value).getNombreCompleto());
-                } else {
-                    setText("— Venta anónima —");
-                }
-                return this;
-            }
-        });
-        comboCliente.setPreferredSize(new Dimension(200, 30));
-        panel.add(comboCliente);
+    // cliente y forma de pago
+    JPanel filaCliente = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
 
-        // Selector de forma de pago
-        panel.add(new JLabel("Forma de pago:"));
-        comboPago = new JComboBox<>(new String[]{"efectivo", "tarjeta", "otros"});
-        panel.add(comboPago);
-        // Campo de descuento
-        panel.add(new JLabel("Descuento (%):"));
-        campoDescuento = new JTextField("0");
-        campoDescuento.setPreferredSize(new Dimension(60, 30));
-        panel.add(campoDescuento);
-        JButton btnCancelar = new JButton("Cancelar venta");
-        JButton btnCobrar = new JButton("Cobrar");
-        btnCobrar.setBackground(new Color(40, 140, 40));
-        btnCobrar.setForeground(Color.WHITE);
-
-        btnCancelar.addActionListener(e -> cancelarVenta());
-        btnCobrar.addActionListener(e -> cobrar());
-
-        panel.add(btnCancelar);
-        panel.add(btnCobrar);
-
-        return panel;
+    filaCliente.add(new JLabel("Cliente:"));
+    comboCliente = new JComboBox<>();
+    comboCliente.addItem(null);
+    for (Cliente c : clienteDAO.listarTodos()) {
+        comboCliente.addItem(c);
     }
+    comboCliente.setRenderer(new DefaultListCellRenderer() {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value,
+                int index, boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            if (value instanceof Cliente) {
+                setText(((Cliente) value).getNombreCompleto());
+            } else {
+                setText("— Venta anónima —");
+            }
+            return this;
+        }
+    });
+    comboCliente.setPreferredSize(new Dimension(200, 30));
+    filaCliente.add(comboCliente);
+
+    filaCliente.add(new JLabel("Forma de pago:"));
+    comboPago = new JComboBox<>(new String[]{"efectivo", "tarjeta", "otros"});
+    filaCliente.add(comboPago);
+
+    filaCliente.add(new JLabel("Descuento (%):"));
+    campoDescuento = new JTextField("0");
+    campoDescuento.setPreferredSize(new Dimension(60, 30));
+    filaCliente.add(campoDescuento);
+
+    //botones
+    JPanel filaBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 4));
+
+    JButton btnCancelar = new JButton("Cancelar venta");
+    JButton btnCobrar   = new JButton("Cobrar");
+    btnCobrar.putClientProperty("JButton.buttonType", "default");
+
+    btnCancelar.addActionListener(e -> cancelarVenta());
+    btnCobrar.addActionListener(e -> cobrar());
+
+    filaBotones.add(btnCancelar);
+    filaBotones.add(btnCobrar);
+
+    panel.add(filaCliente,  BorderLayout.NORTH);
+    panel.add(filaBotones,  BorderLayout.SOUTH);
+
+    return panel;
+}
+    
 
     // Buscar producto por nombre
     private void buscarProductos() {
