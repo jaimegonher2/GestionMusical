@@ -69,6 +69,15 @@ public class InformePanel extends JPanel {
         btnFiltrar.addActionListener(e -> generarInforme());
         panelFiltro.add(btnFiltrar);
 
+        JButton btnExportarPDF = new JButton("Exportar PDF");
+        JButton btnExportarExcel = new JButton("Exportar Excel");
+
+        btnExportarPDF.addActionListener(e -> exportarPDF());
+        btnExportarExcel.addActionListener(e -> exportarExcel());
+
+        panelFiltro.add(btnExportarPDF);
+        panelFiltro.add(btnExportarExcel);
+
         // Etiqueta de resumen en su propia fila
         etiquetaResumen = new JLabel(" ");
         etiquetaResumen.setFont(new Font("SansSerif", Font.BOLD, 13));
@@ -121,8 +130,16 @@ public class InformePanel extends JPanel {
         tablaStockBajo.getTableHeader().setReorderingAllowed(false);
         pestanyas.addTab("Stock bajo mínimo", new JScrollPane(tablaStockBajo));
 
+        // Panel inferior con botones de exportación
+        JPanel panelExportar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 4));
+        btnExportarPDF.addActionListener(e -> exportarPDF());
+        btnExportarExcel.addActionListener(e -> exportarExcel());
+        panelExportar.add(btnExportarPDF);
+        panelExportar.add(btnExportarExcel);
+
         add(panelNorte, BorderLayout.NORTH);
         add(pestanyas, BorderLayout.CENTER);
+        add(panelExportar, BorderLayout.SOUTH);
     }
 
     // Cargar informes con el mes actual al abrir el panel
@@ -228,6 +245,131 @@ public class InformePanel extends JPanel {
                 });
     }
 
+    // Exportar informe de ventas a PDF
+    private void exportarPDF() {
+        String fechaInicio = campoFechaInicio.getText().trim();
+        String fechaFin = campoFechaFin.getText().trim();
+
+        if (fechaInicio.isEmpty() || fechaFin.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Introduce las fechas antes de exportar.");
+            return;
+        }
+
+        // Selector de archivo donde guardar el PDF
+        JFileChooser selector = new JFileChooser();
+        selector.setSelectedFile(new java.io.File("informe_ventas.pdf"));
+        int opcion = selector.showSaveDialog(this);
+        if (opcion != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        String ruta = selector.getSelectedFile().getAbsolutePath();
+        if (!ruta.endsWith(".pdf")) {
+            ruta += ".pdf";
+        }
+
+        try {
+            com.itextpdf.text.Document documento = new com.itextpdf.text.Document();
+            com.itextpdf.text.pdf.PdfWriter.getInstance(documento, new java.io.FileOutputStream(ruta));
+            documento.open();
+
+            // Título
+            com.itextpdf.text.Font fuenteTitulo = new com.itextpdf.text.Font(
+                    com.itextpdf.text.Font.FontFamily.HELVETICA, 16,
+                    com.itextpdf.text.Font.BOLD);
+            documento.add(new com.itextpdf.text.Paragraph(
+                    "Informe de ventas — " + fechaInicio + " a " + fechaFin, fuenteTitulo));
+            documento.add(new com.itextpdf.text.Paragraph(" "));
+
+            // Tabla de ventas
+            com.itextpdf.text.pdf.PdfPTable tabla = new com.itextpdf.text.pdf.PdfPTable(4);
+            tabla.setWidthPercentage(100);
+            tabla.addCell("ID Venta");
+            tabla.addCell("Fecha");
+            tabla.addCell("Total");
+            tabla.addCell("Forma de pago");
+
+            for (int i = 0; i < modeloVentas.getRowCount(); i++) {
+                tabla.addCell(modeloVentas.getValueAt(i, 0).toString());
+                tabla.addCell(modeloVentas.getValueAt(i, 1).toString());
+                tabla.addCell(modeloVentas.getValueAt(i, 2).toString());
+                tabla.addCell(modeloVentas.getValueAt(i, 4).toString());
+            }
+
+            documento.add(tabla);
+            documento.close();
+
+            JOptionPane.showMessageDialog(this, "PDF exportado correctamente:\n" + ruta);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al exportar PDF: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+// Exportar informe de ventas a Excel
+    private void exportarExcel() {
+        String fechaInicio = campoFechaInicio.getText().trim();
+        String fechaFin = campoFechaFin.getText().trim();
+
+        if (fechaInicio.isEmpty() || fechaFin.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Introduce las fechas antes de exportar.");
+            return;
+        }
+
+        // Selector de archivo donde guardar el Excel
+        JFileChooser selector = new JFileChooser();
+        selector.setSelectedFile(new java.io.File("informe_ventas.xlsx"));
+        int opcion = selector.showSaveDialog(this);
+        if (opcion != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        String ruta = selector.getSelectedFile().getAbsolutePath();
+        if (!ruta.endsWith(".xlsx")) {
+            ruta += ".xlsx";
+        }
+
+        try {
+            org.apache.poi.xssf.usermodel.XSSFWorkbook libro
+                    = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
+            org.apache.poi.ss.usermodel.Sheet hoja = libro.createSheet("Ventas");
+
+            // Cabecera
+            org.apache.poi.ss.usermodel.Row cabecera = hoja.createRow(0);
+            cabecera.createCell(0).setCellValue("ID Venta");
+            cabecera.createCell(1).setCellValue("Fecha");
+            cabecera.createCell(2).setCellValue("Total");
+            cabecera.createCell(3).setCellValue("Forma de pago");
+
+            // Datos
+            for (int i = 0; i < modeloVentas.getRowCount(); i++) {
+                org.apache.poi.ss.usermodel.Row fila = hoja.createRow(i + 1);
+                fila.createCell(0).setCellValue(modeloVentas.getValueAt(i, 0).toString());
+                fila.createCell(1).setCellValue(modeloVentas.getValueAt(i, 1).toString());
+                fila.createCell(2).setCellValue(modeloVentas.getValueAt(i, 2).toString());
+                fila.createCell(3).setCellValue(modeloVentas.getValueAt(i, 4).toString());
+            }
+
+            // Ajustar ancho de columnas
+            for (int i = 0; i < 4; i++) {
+                hoja.autoSizeColumn(i);
+            }
+
+            // Guardar archivo
+            java.io.FileOutputStream salida = new java.io.FileOutputStream(ruta);
+            libro.write(salida);
+            salida.close();
+            libro.close();
+
+            JOptionPane.showMessageDialog(this, "Excel exportado correctamente:\n" + ruta);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error al exportar Excel: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     // Cargar productos con stock bajo mínimo
     private void cargarStockBajoMinimo() {
         List<Producto> productos = productoDAO.listarBajoMinimo();
@@ -244,4 +386,3 @@ public class InformePanel extends JPanel {
         }
     }
 }
-

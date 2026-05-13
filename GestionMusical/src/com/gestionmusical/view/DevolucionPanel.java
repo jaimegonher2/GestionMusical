@@ -1,9 +1,11 @@
 package com.gestionmusical.view;
 
 import com.gestionmusical.dao.DevolucionDAO;
+import com.gestionmusical.dao.LineaVentaDAO;
 import com.gestionmusical.dao.ProductoDAO;
 import com.gestionmusical.dao.VentaDAO;
 import com.gestionmusical.model.Devolucion;
+import com.gestionmusical.model.LineaVenta;
 import com.gestionmusical.model.Producto;
 import com.gestionmusical.model.Usuario;
 import com.gestionmusical.model.Venta;
@@ -11,35 +13,42 @@ import java.awt.*;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
 /*Panel de gestión de devoluciones.
- Permite buscar una venta por ID y registrar la devolución de uno o varios productos de esa venta.*/
-
+ Muestra la lista de ventas, al seleccionar una carga sus líneas
+ y permite registrar la devolución de cualquier producto de esa venta.*/
 public class DevolucionPanel extends JPanel {
 
-    // daos
+    // DAOs
     private final DevolucionDAO devolucionDAO = new DevolucionDAO();
     private final VentaDAO ventaDAO = new VentaDAO();
     private final ProductoDAO productoDAO = new ProductoDAO();
+    private final LineaVentaDAO lineaVentaDAO = new LineaVentaDAO();
 
     // Usuario activo
     private final Usuario usuarioActivo;
 
-    
-    private JTextField campoIdVenta;
-    private JLabel etiquetaInfoVenta;
+    // Tabla de ventas
+    private JTable tablaVentas;
+    private DefaultTableModel modeloVentas;
 
-   
+    // Tabla de líneas de la venta seleccionada
+    private JTable tablaLineas;
+    private DefaultTableModel modeloLineas;
+
+    // Tabla de devoluciones registradas
     private JTable tablaDevoluciiones;
     private DefaultTableModel modeloTabla;
 
-    
+    // Venta actualmente seleccionada
     private Venta ventaCargada = null;
 
     public DevolucionPanel(Usuario usuarioActivo) {
         this.usuarioActivo = usuarioActivo;
         initComponents();
+        cargarVentas();
         cargarDevoluciones();
     }
 
@@ -47,34 +56,59 @@ public class DevolucionPanel extends JPanel {
         setLayout(new BorderLayout(0, 10));
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
-       // panel superior, busqueda por ID
-        JPanel panelBusqueda = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        // Tabla de ventas
+        String[] columnasVentas = {"ID", "Fecha", "Total", "Forma de pago"};
+        modeloVentas = new DefaultTableModel(columnasVentas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
+        };
+        tablaVentas = new JTable(modeloVentas);
+        tablaVentas.setRowHeight(26);
+        tablaVentas.getColumnModel().getColumn(0).setMaxWidth(50);
+        tablaVentas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tablaVentas.getTableHeader().setReorderingAllowed(false);
 
-        panelBusqueda.add(new JLabel("ID de venta:"));
-        campoIdVenta = new JTextField(8);
-        campoIdVenta.addActionListener(e -> buscarVenta());
-        panelBusqueda.add(campoIdVenta);
+        // Al seleccionar una venta cargar sus líneas automáticamente
+        tablaVentas.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int fila = tablaVentas.getSelectedRow();
+                if (fila >= 0) {
+                    int idVenta = (int) modeloVentas.getValueAt(fila, 0);
+                    ventaCargada = ventaDAO.buscarPorId(idVenta);
+                    cargarLineasVenta(idVenta);
+                }
+            }
+        });
 
-        JButton btnBuscarVenta = new JButton("Buscar venta");
-        btnBuscarVenta.addActionListener(e -> buscarVenta());
-        panelBusqueda.add(btnBuscarVenta);
+        JPanel panelVentas = new JPanel(new BorderLayout());
+        panelVentas.setBorder(new TitledBorder("Ventas — selecciona una para ver sus líneas"));
+        panelVentas.add(new JScrollPane(tablaVentas), BorderLayout.CENTER);
 
-        // Etiqueta que muestra información de la venta encontrada
-        etiquetaInfoVenta = new JLabel("Introduce el ID de la venta para registrar una devolución.");
-        etiquetaInfoVenta.setForeground(Color.GRAY);
-        panelBusqueda.add(etiquetaInfoVenta);
+        // Tabla de líneas de la venta seleccionada
+        String[] columnasLineas = {"ID Producto", "Producto", "Cantidad", "Precio unit.", "Subtotal"};
+        modeloLineas = new DefaultTableModel(columnasLineas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int col) { return false; }
+        };
+        tablaLineas = new JTable(modeloLineas);
+        tablaLineas.setRowHeight(26);
+        tablaLineas.getColumnModel().getColumn(0).setMaxWidth(90);
+        tablaLineas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tablaLineas.getTableHeader().setReorderingAllowed(false);
 
-        JButton btnNuevaDevolucion = new JButton("Registrar devolución");
-        btnNuevaDevolucion.addActionListener(e -> registrarDevolucion());
-        panelBusqueda.add(btnNuevaDevolucion);
+        JButton btnRegistrar = new JButton("Registrar devolución");
+        btnRegistrar.addActionListener(e -> registrarDevolucion());
+
+        JPanel panelLineas = new JPanel(new BorderLayout());
+        panelLineas.setBorder(new TitledBorder("Líneas de la venta seleccionada"));
+        panelLineas.add(new JScrollPane(tablaLineas), BorderLayout.CENTER);
+        panelLineas.add(btnRegistrar, BorderLayout.SOUTH);
 
         // Tabla de devoluciones registradas
         String[] columnas = {"ID", "ID Venta", "Producto", "Cantidad", "Motivo", "Fecha"};
         modeloTabla = new DefaultTableModel(columnas, 0) {
             @Override
-            public boolean isCellEditable(int row, int col) {
-                return false;
-            }
+            public boolean isCellEditable(int row, int col) { return false; }
         };
 
         tablaDevoluciiones = new JTable(modeloTabla);
@@ -84,13 +118,62 @@ public class DevolucionPanel extends JPanel {
         tablaDevoluciiones.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tablaDevoluciiones.getTableHeader().setReorderingAllowed(false);
 
-        JScrollPane scroll = new JScrollPane(tablaDevoluciiones);
+        JPanel panelDevoluciones = new JPanel(new BorderLayout());
+        panelDevoluciones.setBorder(new TitledBorder("Historial de devoluciones"));
+        panelDevoluciones.add(new JScrollPane(tablaDevoluciiones), BorderLayout.CENTER);
 
-        add(panelBusqueda, BorderLayout.NORTH);
-        add(scroll, BorderLayout.CENTER);
+        // Panel izquierdo: ventas arriba, líneas abajo
+        JSplitPane splitIzquierda = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+                panelVentas, panelLineas);
+        splitIzquierda.setDividerLocation(200);
+        splitIzquierda.setResizeWeight(0.5);
+
+        // Panel principal: izquierda ventas/líneas, derecha historial devoluciones
+        JSplitPane splitPrincipal = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+                splitIzquierda, panelDevoluciones);
+        splitPrincipal.setDividerLocation(400);
+        splitPrincipal.setResizeWeight(0.55);
+
+        add(splitPrincipal, BorderLayout.CENTER);
     }
 
-    // Cargar todas las devoluciones
+    // Cargar todas las ventas en la tabla
+    private void cargarVentas() {
+        List<Venta> ventas = ventaDAO.listarTodas();
+        modeloVentas.setRowCount(0);
+        for (Venta v : ventas) {
+            modeloVentas.addRow(new Object[]{
+                v.getIdVenta(),
+                v.getFechaHora(),
+                String.format("%.2f €", v.getTotal()),
+                v.getFormaPago()
+            });
+        }
+    }
+
+    // Cargar las líneas de la venta seleccionada
+    private void cargarLineasVenta(int idVenta) {
+        modeloLineas.setRowCount(0);
+        List<LineaVenta> lineas = lineaVentaDAO.listarPorVenta(idVenta);
+        for (LineaVenta l : lineas) {
+            Producto producto = productoDAO.buscarPorId(l.getIdProducto());
+            String nombreProducto;
+            if (producto != null) {
+                nombreProducto = producto.getNombre();
+            } else {
+                nombreProducto = "ID: " + l.getIdProducto();
+            }
+            modeloLineas.addRow(new Object[]{
+                l.getIdProducto(),
+                nombreProducto,
+                l.getCantidad(),
+                String.format("%.2f €", l.getPrecioUnitario()),
+                String.format("%.2f €", l.getSubtotal())
+            });
+        }
+    }
+
+    // Cargar todas las devoluciones registradas
     private void cargarDevoluciones() {
         List<Devolucion> devoluciones = devolucionDAO.listarTodas();
         modeloTabla.setRowCount(0);
@@ -103,7 +186,6 @@ public class DevolucionPanel extends JPanel {
             } else {
                 nombreProducto = "ID: " + d.getIdProducto();
             }
-
             modeloTabla.addRow(new Object[]{
                 d.getIdDevolucion(),
                 d.getIdVenta(),
@@ -115,54 +197,32 @@ public class DevolucionPanel extends JPanel {
         }
     }
 
-    // BUscar una venta por ID para hacer una devolución
-    private void buscarVenta() {
-        String texto = campoIdVenta.getText().trim();
-        if (texto.isEmpty()) {
-            return;
-        }
-
-        try {
-            int idVenta = Integer.parseInt(texto);
-            ventaCargada = ventaDAO.buscarPorId(idVenta);
-
-            if (ventaCargada != null) {
-                // Mostrar información básica de la venta encontrada
-                etiquetaInfoVenta.setText(
-                        "Venta #" + ventaCargada.getIdVenta()
-                        + " | " + ventaCargada.getFechaHora()
-                        + " | Total: " + String.format("%.2f €", ventaCargada.getTotal())
-                );
-                etiquetaInfoVenta.setForeground(new Color(0, 120, 0));
-            } else {
-                etiquetaInfoVenta.setText("No se encontró ninguna venta con ese ID.");
-                etiquetaInfoVenta.setForeground(Color.RED);
-                ventaCargada = null;
-            }
-        } catch (NumberFormatException e) {
-            // El ID introducido no es un número válido
-            etiquetaInfoVenta.setText("El ID de venta debe ser un número.");
-            etiquetaInfoVenta.setForeground(Color.RED);
-        }
-    }
-
-    // Registrar nueva devolucion
+    // Registrar nueva devolución
     private void registrarDevolucion() {
-        // Verificar que hay una venta cargada
+        // Verificar que hay una venta seleccionada
         if (ventaCargada == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Primero busca una venta válida.");
+            JOptionPane.showMessageDialog(this, "Selecciona una venta de la tabla.");
             return;
         }
 
-        // Formulario para introducir los datos de la devolución
+        // Verificar que hay una línea seleccionada
+        int filaLinea = tablaLineas.getSelectedRow();
+        if (filaLinea < 0) {
+            JOptionPane.showMessageDialog(this, "Selecciona el producto a devolver en las líneas de la venta.");
+            return;
+        }
+
+        // Obtener el producto de la línea seleccionada
+        int idProducto = (int) modeloLineas.getValueAt(filaLinea, 0);
+        String nombreProducto = (String) modeloLineas.getValueAt(filaLinea, 1);
+
+        // Formulario para introducir cantidad y motivo
         JTextField campoCantidad = new JTextField("1");
-        JTextField campoMotivo = new JTextField();
-        JTextField campoIdProducto = new JTextField();
+        JTextField campoMotivo   = new JTextField();
 
         JPanel formulario = new JPanel(new GridLayout(0, 2, 8, 8));
-        formulario.add(new JLabel("ID del producto:"));
-        formulario.add(campoIdProducto);
+        formulario.add(new JLabel("Producto:"));
+        formulario.add(new JLabel(nombreProducto));
         formulario.add(new JLabel("Cantidad:"));
         formulario.add(campoCantidad);
         formulario.add(new JLabel("Motivo:"));
@@ -177,7 +237,6 @@ public class DevolucionPanel extends JPanel {
         }
 
         try {
-            int idProducto = Integer.parseInt(campoIdProducto.getText().trim());
             int cantidad = Integer.parseInt(campoCantidad.getText().trim());
             String motivo = campoMotivo.getText().trim();
 
@@ -206,12 +265,11 @@ public class DevolucionPanel extends JPanel {
                     "Devolución registrada. Stock de \"" + producto.getNombre()
                     + "\" actualizado a " + nuevoStock + " unidades.");
 
-            // Recargar la tabla de devoluciones
+            // Recargar tabla de devoluciones
             cargarDevoluciones();
 
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this,
-                    "El ID de producto y la cantidad deben ser números válidos.");
+            JOptionPane.showMessageDialog(this, "La cantidad debe ser un número válido.");
         }
     }
 }
