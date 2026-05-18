@@ -70,4 +70,15 @@
     nbproject/build-impl.xml file. 
 
     -->
+    <target name="test-junit5" depends="compile-test-single">
+    <java jar="/Users/jaime/Downloads/junit-platform-console-standalone-1.10.0.jar"
+          fork="true"
+          failonerror="false">
+        <arg value="--class-path"/>
+        <arg value="${build.test.classes.dir}:${build.classes.dir}:${javac.test.classpath}"/>
+        <arg value="--select-class"/>
+        <arg value="${test.class}"/>
+        <arg value="--details=verbose"/>
+    </java>
+</target>
 </project>
